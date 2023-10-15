@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
 cs = digitalio.DigitalInOut(board.D5)
 bmp280 = adafruit_bmp280.Adafruit_BMP280_SPI(spi, cs)
-bmp280.sea_level_pressure = 1011.
+bmp280.sea_level_pressure = 1013.25
 GPIO.setmode(GPIO.BCM)
 servo_pin = 18
 GPIO.setup(servo_pin, GPIO.OUT)
@@ -27,7 +27,7 @@ while True:
         time.sleep(0.1)
         if altitude >= 3000:
             continue
-    if altitude >= 77:
+    if altitude >= 95.5:
         try:
             pwm.ChangeDutyCycle(12.5)  # 12.5 means 180 degrees
             time.sleep(1)  # program waits for 1 second
