@@ -5,12 +5,13 @@ import digitalio
 import adafruit_bmp280
 import RPi.GPIO as GPIO
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
 cs = digitalio.DigitalInOut(board.D5)
 bmp280 = adafruit_bmp280.Adafruit_BMP280_SPI(spi, cs)
 bmp280.sea_level_pressure = 1013.25
+
 GPIO.setmode(GPIO.BCM)
 servo_pin = 18
 GPIO.setwarnings(False)
@@ -34,10 +35,13 @@ moving_std = []
 alpha = 0.25
 beta = 0.125
 temp_altitude = []
-
+#init_altitude = bmp280.altitude
+init_altitude = 0
 while True:
-    init_altitude = bmp280.altitude
     altitude = bmp280.altitude
+    if init_altitude == 0:
+        init_altitude = altitude
+    
     cali_altitude = altitude - init_altitude
     result = cali_altitude
     data.append(result)
@@ -55,8 +59,9 @@ while True:
     print("Real Altitude : ", altitude)
 
     print("Calibration Altitude : ", cali_altitude)
+    print("Moving Average : ", estimated)
     
-    if cali_altitude > 0.3:
+    if cali_altitude >= 0.5:
         try:
             pwm.ChangeDutyCycle(12.5)
             time.sleep(1)
@@ -66,6 +71,8 @@ while True:
             pass
     
     if not abs(cali_altitude - estimated) <= np.sqrt(var):
+    # if sensor value has error, initialize initial altitude
+        init_altitude = 0
         continue
     
     with open('log_data.txt', 'a') as file:
@@ -73,7 +80,5 @@ while True:
         file.flush()
         time.sleep(0.1)
 	
-    time.sleep(0.5)
+    time.sleep(0.3)
                    
-
-
