@@ -57,9 +57,9 @@ while True:
     
     print("initial Altitude : ", init_altitude)
     print("Real Altitude : ", altitude)
-
-    print("Calibration Altitude : ", cali_altitude)
     print("Moving Average : ", estimated)
+    print("Calibration Altitude : ", cali_altitude)
+    
     
     if cali_altitude >= 0.5:
         try:
@@ -72,8 +72,10 @@ while True:
     
     if not abs(cali_altitude - estimated) <= np.sqrt(var):
     # if sensor value has error, initialize initial altitude
-        init_altitude = 0
-        continue
+        #pwm.ChangeDutyCycle(0)
+        pwm.ChangeDutyCycle(0)
+        initial_altitude = 0
+        #continue
     
     with open('log_data.txt', 'a') as file:
         file.write(f'Calibration Alitude : {cali_altitude} m\n')
@@ -82,3 +84,4 @@ while True:
 	
     time.sleep(0.3)
                    
+
