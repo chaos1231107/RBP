@@ -6,7 +6,6 @@ import adafruit_bmp280
 import RPi.GPIO as GPIO
 import numpy as np
 
-
 spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
 cs = digitalio.DigitalInOut(board.D5)
 bmp280 = adafruit_bmp280.Adafruit_BMP280_SPI(spi, cs)
@@ -35,8 +34,8 @@ moving_std = []
 alpha = 0.25
 beta = 0.125
 temp_altitude = []
-#init_altitude = bmp280.altitude
-init_altitude = 0
+init_altitude = 0  
+
 while True:
     altitude = bmp280.altitude
     if init_altitude == 0:
@@ -46,6 +45,9 @@ while True:
     result = cali_altitude
     data.append(result)
 
+    if len(data) < window:
+        data.append(init_altitude)
+    
     ma = moving_average(data, window)
     ma = np.array(ma)
 
@@ -53,13 +55,11 @@ while True:
     estimated = (1 - alpha) * estimated + alpha * result
     var = np.var(data[-window:])
     var = (1 - beta) * var + beta * abs(result - estimated)
-
     
-    print("initial Altitude : ", init_altitude)
-    print("Real Altitude : ", altitude)
-    print("Moving Average : ", estimated)
-    print("Calibration Altitude : ", cali_altitude)
-    
+    print("Initial Altitude: ", init_altitude)
+    print("Real Altitude: ", altitude)
+    print("Moving Average: ", estimated)
+    print("Calibration Altitude: ", cali_altitude)
     
     if cali_altitude >= 0.5:
         try:
@@ -67,21 +67,17 @@ while True:
             time.sleep(1)
             pwm.ChangeDutyCycle(2.5)
             time.sleep(0.7)
-        except keyboardInterupt:
+        except KeyboardInterrupt:
             pass
     
     if not abs(cali_altitude - estimated) <= np.sqrt(var):
-    # if sensor value has error, initialize initial altitude
-        #pwm.ChangeDutyCycle(0)
         pwm.ChangeDutyCycle(0)
-        initial_altitude = 0
-        #continue
+        init_altitude = 0
     
     with open('log_data.txt', 'a') as file:
-        file.write(f'Calibration Alitude : {cali_altitude} m\n')
+        file.write(f'Calibration Altitude: {cali_altitude} m\n')
         file.flush()
         time.sleep(0.1)
-	
+    
     time.sleep(0.3)
-                   
 
